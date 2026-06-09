@@ -20,7 +20,11 @@ import type {
 
 @Injectable()
 export class CategoriesService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  private readonly prisma: PrismaService;
+
+  constructor(@Inject(PrismaService) prisma: PrismaService) {
+    this.prisma = prisma;
+  }
 
   async create(dto: CreateCategoryDto): Promise<CategoryResponseDto> {
     validateCreateCategoryDto(dto);

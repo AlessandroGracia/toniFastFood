@@ -10,7 +10,11 @@ import type {
 
 @Controller("catalog/categories")
 export class CategoriesController {
-  constructor(@Inject(CategoriesService) private readonly categoriesService: CategoriesService) {}
+  private readonly categoriesService: CategoriesService;
+
+  constructor(@Inject(CategoriesService) categoriesService: CategoriesService) {
+    this.categoriesService = categoriesService;
+  }
 
   @Post()
   create(@Body() dto: CreateCategoryDto): Promise<CategoryResponseDto> {

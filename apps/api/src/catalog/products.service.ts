@@ -21,7 +21,11 @@ import { mapProduct } from "./product.mapper";
 
 @Injectable()
 export class ProductsService {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  private readonly prisma: PrismaService;
+
+  constructor(@Inject(PrismaService) prisma: PrismaService) {
+    this.prisma = prisma;
+  }
 
   async create(dto: CreateProductDto): Promise<ProductResponseDto> {
     validateCreateProductDto(dto);

@@ -10,7 +10,11 @@ import { ProductsService } from "./products.service";
 
 @Controller("catalog/products")
 export class ProductsController {
-  constructor(@Inject(ProductsService) private readonly productsService: ProductsService) {}
+  private readonly productsService: ProductsService;
+
+  constructor(@Inject(ProductsService) productsService: ProductsService) {
+    this.productsService = productsService;
+  }
 
   @Post()
   create(@Body() dto: CreateProductDto): Promise<ProductResponseDto> {
