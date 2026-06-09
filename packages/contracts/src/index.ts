@@ -42,5 +42,17 @@ export interface ProblemDetails {
   correlationId?: UUID;
 }
 
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  pageCount: number;
+}
+
+export interface PaginatedResponse<TItem> {
+  data: TItem[];
+  meta: PaginationMeta;
+}
+
 export * from "./catalog.js";
 export * from "./inventory.js";

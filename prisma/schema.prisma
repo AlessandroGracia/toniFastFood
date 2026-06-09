@@ -301,6 +301,7 @@ model Category {
   name        String         @db.VarChar(160)
   slug        String         @db.VarChar(180)
   description String?        @db.VarChar(500)
+  active      Boolean        @default(true)
   sortOrder   Int            @default(0) @map("sort_order")
   status      CategoryStatus @default(ACTIVE)
   createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -310,6 +311,7 @@ model Category {
   products    Product[]
 
   @@unique([tenantId, slug])
+  @@index([tenantId, active])
   @@index([tenantId, status])
   @@index([tenantId, name])
   @@index([tenantId, deletedAt])
@@ -323,6 +325,9 @@ model Product {
   name        String           @db.VarChar(180)
   slug        String           @db.VarChar(200)
   description String?          @db.VarChar(800)
+  price       Decimal          @default(0) @db.Decimal(12, 2)
+  active      Boolean          @default(true)
+  imageUrl    String?          @map("image_url") @db.VarChar(1000)
   sku         String?          @db.VarChar(80)
   barcode     String?          @db.VarChar(80)
   status      ProductStatus    @default(ACTIVE)
@@ -335,6 +340,7 @@ model Product {
 
   @@unique([tenantId, slug])
   @@index([tenantId, categoryId])
+  @@index([tenantId, active])
   @@index([tenantId, status])
   @@index([tenantId, name])
   @@index([tenantId, sku])

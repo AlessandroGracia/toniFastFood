@@ -6,3 +6,5 @@ export interface ApiClientConfig {
 export function createApiClient(config: ApiClientConfig): ApiClientConfig {
   return config;
 }
+
+export * from "./catalog.js";

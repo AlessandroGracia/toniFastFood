@@ -15,6 +15,7 @@ export default function AdminHomePage() {
         </div>
         <nav aria-label="Admin navigation">
           <a href="#">Overview</a>
+          <a href="/catalog">Catalog</a>
           <a href="#">Branches</a>
           <a href="#">Catalog</a>
           <a href="#">Inventory</a>

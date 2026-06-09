@@ -7,6 +7,7 @@ export interface CreateCategoryDto {
   name: string;
   slug?: string;
   description?: string;
+  active?: boolean;
   sortOrder?: number;
   status?: CategoryStatusDto;
 }
@@ -15,8 +16,17 @@ export interface UpdateCategoryDto {
   name?: string;
   slug?: string;
   description?: string | null;
+  active?: boolean;
   sortOrder?: number;
   status?: CategoryStatusDto;
+}
+
+export interface CategoryListQueryDto {
+  tenantId: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  active?: boolean;
 }
 
 export interface CategoryResponseDto {
@@ -25,6 +35,7 @@ export interface CategoryResponseDto {
   name: string;
   slug: string;
   description: string | null;
+  active: boolean;
   sortOrder: number;
   status: CategoryStatusDto;
   createdAt: string;
@@ -49,6 +60,9 @@ export interface CreateProductDto {
   name: string;
   slug?: string;
   description?: string;
+  price?: number;
+  active?: boolean;
+  imageUrl?: string;
   sku?: string;
   barcode?: string;
   status?: ProductStatusDto;
@@ -60,9 +74,21 @@ export interface UpdateProductDto {
   name?: string;
   slug?: string;
   description?: string | null;
+  price?: number;
+  active?: boolean;
+  imageUrl?: string | null;
   sku?: string | null;
   barcode?: string | null;
   status?: ProductStatusDto;
+}
+
+export interface ProductListQueryDto {
+  tenantId: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  active?: boolean;
+  categoryId?: string;
 }
 
 export interface ProductVariantResponseDto {
@@ -89,6 +115,9 @@ export interface ProductResponseDto {
   name: string;
   slug: string;
   description: string | null;
+  price: number;
+  active: boolean;
+  imageUrl: string | null;
   sku: string | null;
   barcode: string | null;
   status: ProductStatusDto;

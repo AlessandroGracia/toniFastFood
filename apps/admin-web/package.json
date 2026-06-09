@@ -11,12 +11,16 @@
     "test": "echo \"No tests configured for admin-web yet\""
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
+    "@tanstack/react-table": "^8.21.3",
     "@tonios/api-sdk": "workspace:*",
     "@tonios/contracts": "workspace:*",
     "@tonios/ui": "workspace:*",
     "next": "^15.5.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-hook-form": "^7.68.0",
+    "zod": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

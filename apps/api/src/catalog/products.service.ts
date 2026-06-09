@@ -1,13 +1,22 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import type { PaginatedResponse } from "@tonios/contracts";
 import { PrismaService } from "../prisma/prisma.service";
 import {
+  normalizeProductListQuery,
+  statusFromActive,
   toSlug,
   validateCreateProductDto,
   validateEntityId,
   validateTenantId,
   validateUpdateProductDto
 } from "./catalog.validation";
-import type { CreateProductDto, ProductResponseDto, UpdateProductDto } from "./dto";
+import type {
+  CreateProductDto,
+  CreateProductVariantDto,
+  ProductListQueryDto,
+  ProductResponseDto,
+  UpdateProductDto
+} from "./dto";
 import { mapProduct } from "./product.mapper";
 
 @Injectable()
@@ -19,6 +28,19 @@ export class ProductsService {
 
     await this.ensureCategoryExists(dto.tenantId, dto.categoryId);
 
+    const variantsToCreate: CreateProductVariantDto[] =
+      dto.variants && dto.variants.length > 0
+        ? dto.variants
+        : [
+            {
+              name: dto.name,
+              sku: dto.sku,
+              barcode: dto.barcode,
+              priceCents: Math.round((dto.price ?? 0) * 100),
+              status: statusFromActive(dto.active, "ACTIVE", "INACTIVE") ?? "ACTIVE"
+            }
+          ];
+
     const product = await this.prisma.product.create({
       data: {
         tenantId: dto.tenantId,
@@ -26,11 +48,14 @@ export class ProductsService {
         name: dto.name.trim(),
         slug: dto.slug?.trim() ?? toSlug(dto.name),
         description: dto.description?.trim(),
+        price: dto.price ?? 0,
+        active: dto.active ?? true,
+        imageUrl: dto.imageUrl?.trim(),
         sku: dto.sku?.trim(),
         barcode: dto.barcode?.trim(),
-        status: dto.status ?? "ACTIVE",
+        status: dto.status ?? statusFromActive(dto.active, "ACTIVE", "INACTIVE") ?? "ACTIVE",
         variants: {
-          create: (dto.variants ?? []).map((variant, index) => ({
+          create: variantsToCreate.map((variant, index) => ({
             tenantId: dto.tenantId,
             name: variant.name.trim(),
             sku: variant.sku?.trim(),
@@ -49,24 +74,41 @@ export class ProductsService {
     return mapProduct(product);
   }
 
-  async findMany(tenantId: string): Promise<ProductResponseDto[]> {
-    validateTenantId(tenantId);
+  async findMany(query: ProductListQueryDto): Promise<PaginatedResponse<ProductResponseDto>> {
+    const { tenantId, page, pageSize, search, active, categoryId } = normalizeProductListQuery(query);
+    const where = {
+      tenantId,
+      deletedAt: null,
+      ...(active === undefined ? {} : { active }),
+      ...(categoryId === undefined ? {} : { categoryId }),
+      ...(search === undefined ? {} : { name: { contains: search, mode: "insensitive" as const } })
+    };
 
-    const products = await this.prisma.product.findMany({
-      where: {
-        tenantId,
-        deletedAt: null
-      },
-      include: {
-        variants: {
-          where: { deletedAt: null },
-          orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
-        }
-      },
-      orderBy: [{ name: "asc" }]
-    });
+    const [products, total] = await this.prisma.$transaction([
+      this.prisma.product.findMany({
+        where,
+        include: {
+          variants: {
+            where: { deletedAt: null },
+            orderBy: [{ sortOrder: "asc" }, { name: "asc" }]
+          }
+        },
+        orderBy: [{ name: "asc" }],
+        skip: (page - 1) * pageSize,
+        take: pageSize
+      }),
+      this.prisma.product.count({ where })
+    ]);
 
-    return products.map(mapProduct);
+    return {
+      data: products.map(mapProduct),
+      meta: {
+        page,
+        pageSize,
+        total,
+        pageCount: Math.ceil(total / pageSize)
+      }
+    };
   }
 
   async findOne(tenantId: string, id: string): Promise<ProductResponseDto> {
@@ -111,9 +153,12 @@ export class ProductsService {
         name: dto.name?.trim(),
         slug: dto.slug?.trim(),
         description: dto.description === null ? null : dto.description?.trim(),
+        price: dto.price,
+        active: dto.active,
+        imageUrl: dto.imageUrl === null ? null : dto.imageUrl?.trim(),
         sku: dto.sku === null ? null : dto.sku?.trim(),
         barcode: dto.barcode === null ? null : dto.barcode?.trim(),
-        status: dto.status
+        status: dto.status ?? statusFromActive(dto.active, "ACTIVE", "INACTIVE")
       },
       include: {
         variants: {
@@ -135,6 +180,7 @@ export class ProductsService {
       where: { id },
       data: {
         deletedAt: new Date(),
+        active: false,
         status: "ARCHIVED",
         variants: {
           updateMany: {

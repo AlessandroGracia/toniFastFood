@@ -6,6 +6,7 @@ interface CategoryRecord {
   name: string;
   slug: string;
   description: string | null;
+  active: boolean;
   sortOrder: number;
   status: CategoryResponseDto["status"];
   createdAt: Date;
@@ -20,6 +21,7 @@ export function mapCategory(category: CategoryRecord): CategoryResponseDto {
     name: category.name,
     slug: category.slug,
     description: category.description,
+    active: category.active,
     sortOrder: category.sortOrder,
     status: category.status,
     createdAt: category.createdAt.toISOString(),

@@ -24,6 +24,9 @@ interface ProductRecord {
   name: string;
   slug: string;
   description: string | null;
+  price: number | { toNumber(): number };
+  active: boolean;
+  imageUrl: string | null;
   sku: string | null;
   barcode: string | null;
   status: ProductResponseDto["status"];
@@ -41,6 +44,9 @@ export function mapProduct(product: ProductRecord): ProductResponseDto {
     name: product.name,
     slug: product.slug,
     description: product.description,
+    price: typeof product.price === "number" ? product.price : product.price.toNumber(),
+    active: product.active,
+    imageUrl: product.imageUrl,
     sku: product.sku,
     barcode: product.barcode,
     status: product.status,

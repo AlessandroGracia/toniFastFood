@@ -3,8 +3,10 @@ import type {
   CreateCategoryDto,
   CreateProductDto,
   CreateProductVariantDto,
+  CategoryListQueryDto,
   ProductStatusDto,
   ProductVariantStatusDto,
+  ProductListQueryDto,
   UpdateCategoryDto,
   UpdateProductDto
 } from "./dto";
@@ -14,6 +16,19 @@ const categoryStatuses = new Set(["ACTIVE", "INACTIVE", "ARCHIVED"]);
 const productStatuses = new Set(["ACTIVE", "INACTIVE", "ARCHIVED"]);
 const productVariantStatuses = new Set(["ACTIVE", "INACTIVE", "OUT_OF_STOCK", "ARCHIVED"]);
 const currencyPattern = /^[A-Z]{3}$/;
+const maxPageSize = 100;
+
+export interface NormalizedCatalogListQuery {
+  tenantId: string;
+  page: number;
+  pageSize: number;
+  search?: string;
+  active?: boolean;
+}
+
+export interface NormalizedProductListQuery extends NormalizedCatalogListQuery {
+  categoryId?: string;
+}
 
 export function toSlug(value: string): string {
   return value
@@ -46,6 +61,7 @@ export function validateCreateCategoryDto(dto: CreateCategoryDto): void {
   validateRequiredText(dto.name, "name", 160);
   validateOptionalText(dto.slug, "slug", 180);
   validateOptionalText(dto.description, "description", 500);
+  validateOptionalBoolean(dto.active, "active");
   validateOptionalInteger(dto.sortOrder, "sortOrder");
   validateEnum(dto.status, categoryStatuses, "status");
 }
@@ -54,8 +70,22 @@ export function validateUpdateCategoryDto(dto: UpdateCategoryDto): void {
   validateOptionalText(dto.name, "name", 160);
   validateOptionalText(dto.slug, "slug", 180);
   validateNullableText(dto.description, "description", 500);
+  validateOptionalBoolean(dto.active, "active");
   validateOptionalInteger(dto.sortOrder, "sortOrder");
   validateEnum(dto.status, categoryStatuses, "status");
+}
+
+export function normalizeCategoryListQuery(query: CategoryListQueryDto): NormalizedCatalogListQuery {
+  const tenantId = query.tenantId;
+  validateTenantId(tenantId);
+
+  return {
+    tenantId,
+    page: normalizePositiveInteger(query.page, "page", 1),
+    pageSize: normalizePositiveInteger(query.pageSize, "pageSize", 20, maxPageSize),
+    search: normalizeSearch(query.search),
+    active: normalizeOptionalBoolean(query.active, "active")
+  };
 }
 
 export function validateCreateProductDto(dto: CreateProductDto): void {
@@ -64,6 +94,9 @@ export function validateCreateProductDto(dto: CreateProductDto): void {
   validateRequiredText(dto.name, "name", 180);
   validateOptionalText(dto.slug, "slug", 200);
   validateOptionalText(dto.description, "description", 800);
+  validateOptionalPrice(dto.price, "price");
+  validateOptionalBoolean(dto.active, "active");
+  validateOptionalUrl(dto.imageUrl, "imageUrl");
   validateOptionalText(dto.sku, "sku", 80);
   validateOptionalText(dto.barcode, "barcode", 80);
   validateEnum(dto.status, productStatuses, "status");
@@ -81,9 +114,30 @@ export function validateUpdateProductDto(dto: UpdateProductDto): void {
   validateOptionalText(dto.name, "name", 180);
   validateOptionalText(dto.slug, "slug", 200);
   validateNullableText(dto.description, "description", 800);
+  validateOptionalPrice(dto.price, "price");
+  validateOptionalBoolean(dto.active, "active");
+  validateNullableUrl(dto.imageUrl, "imageUrl");
   validateNullableText(dto.sku, "sku", 80);
   validateNullableText(dto.barcode, "barcode", 80);
   validateEnum<ProductStatusDto>(dto.status, productStatuses, "status");
+}
+
+export function normalizeProductListQuery(query: ProductListQueryDto): NormalizedProductListQuery {
+  const tenantId = query.tenantId;
+  validateTenantId(tenantId);
+
+  if (query.categoryId !== undefined) {
+    validateCategoryId(query.categoryId);
+  }
+
+  return {
+    tenantId,
+    page: normalizePositiveInteger(query.page, "page", 1),
+    pageSize: normalizePositiveInteger(query.pageSize, "pageSize", 20, maxPageSize),
+    search: normalizeSearch(query.search),
+    active: normalizeOptionalBoolean(query.active, "active"),
+    categoryId: query.categoryId
+  };
 }
 
 function validateCreateProductVariantDto(dto: CreateProductVariantDto): void {
@@ -101,6 +155,18 @@ function validateCreateProductVariantDto(dto: CreateProductVariantDto): void {
   if (dto.priceCents !== undefined && dto.priceCents < 0) {
     throw new BadRequestException("variants.priceCents must be greater than or equal to zero.");
   }
+}
+
+export function statusFromActive<TActive extends string, TInactive extends string>(
+  active: boolean | undefined,
+  activeStatus: TActive,
+  inactiveStatus: TInactive
+): TActive | TInactive | undefined {
+  if (active === undefined) {
+    return undefined;
+  }
+
+  return active ? activeStatus : inactiveStatus;
 }
 
 function validateRequiredText(value: string | undefined, field: string, maxLength: number): void {
@@ -149,6 +215,104 @@ function validateOptionalInteger(value: number | undefined, field: string): void
   if (!Number.isInteger(value)) {
     throw new BadRequestException(`${field} must be an integer.`);
   }
+}
+
+function validateOptionalBoolean(value: boolean | undefined, field: string): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (typeof value !== "boolean") {
+    throw new BadRequestException(`${field} must be a boolean.`);
+  }
+}
+
+function validateOptionalPrice(value: number | undefined, field: string): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!Number.isFinite(value) || value < 0) {
+    throw new BadRequestException(`${field} must be a number greater than or equal to zero.`);
+  }
+}
+
+function validateOptionalUrl(value: string | undefined, field: string): void {
+  if (value === undefined) {
+    return;
+  }
+
+  validateUrl(value, field);
+}
+
+function validateNullableUrl(value: string | null | undefined, field: string): void {
+  if (value === null || value === undefined) {
+    return;
+  }
+
+  validateUrl(value, field);
+}
+
+function validateUrl(value: string, field: string): void {
+  validateOptionalText(value, field, 1000);
+
+  if (!value.startsWith("https://") && !value.startsWith("http://") && !value.startsWith("/")) {
+    throw new BadRequestException(`${field} must be an absolute URL or an application-relative path.`);
+  }
+}
+
+function normalizePositiveInteger(
+  value: number | string | undefined,
+  field: string,
+  fallback: number,
+  maxValue = Number.MAX_SAFE_INTEGER
+): number {
+  if (value === undefined || value === "") {
+    return fallback;
+  }
+
+  const parsed = typeof value === "number" ? value : Number(value);
+
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > maxValue) {
+    throw new BadRequestException(`${field} must be an integer between 1 and ${maxValue}.`);
+  }
+
+  return parsed;
+}
+
+function normalizeSearch(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const search = value.trim();
+
+  if (search.length === 0) {
+    return undefined;
+  }
+
+  validateTextLength(search, "search", 160);
+  return search;
+}
+
+function normalizeOptionalBoolean(value: boolean | string | undefined, field: string): boolean | undefined {
+  if (value === undefined || value === "") {
+    return undefined;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (value === "true") {
+    return true;
+  }
+
+  if (value === "false") {
+    return false;
+  }
+
+  throw new BadRequestException(`${field} must be true or false.`);
 }
 
 function validateEnum<T extends string>(

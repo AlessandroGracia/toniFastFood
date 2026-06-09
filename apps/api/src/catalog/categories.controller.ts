@@ -1,6 +1,12 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
+import type { PaginatedResponse } from "@tonios/contracts";
 import { CategoriesService } from "./categories.service";
-import type { CategoryResponseDto, CreateCategoryDto, UpdateCategoryDto } from "./dto";
+import type {
+  CategoryListQueryDto,
+  CategoryResponseDto,
+  CreateCategoryDto,
+  UpdateCategoryDto
+} from "./dto";
 
 @Controller("catalog/categories")
 export class CategoriesController {
@@ -12,8 +18,8 @@ export class CategoriesController {
   }
 
   @Get()
-  findMany(@Query("tenantId") tenantId: string): Promise<CategoryResponseDto[]> {
-    return this.categoriesService.findMany(tenantId);
+  findMany(@Query() query: CategoryListQueryDto): Promise<PaginatedResponse<CategoryResponseDto>> {
+    return this.categoriesService.findMany(query);
   }
 
   @Get(":id")
