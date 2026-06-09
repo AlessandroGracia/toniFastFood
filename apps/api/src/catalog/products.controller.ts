@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Inject, Param, Post, Put, Query } from "@nestjs/common";
 import type { PaginatedResponse } from "@tonios/contracts";
 import type {
   CreateProductDto,
@@ -10,7 +10,7 @@ import { ProductsService } from "./products.service";
 
 @Controller("catalog/products")
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(@Inject(ProductsService) private readonly productsService: ProductsService) {}
 
   @Post()
   create(@Body() dto: CreateProductDto): Promise<ProductResponseDto> {

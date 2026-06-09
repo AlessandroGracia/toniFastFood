@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type { PaginatedResponse } from "@tonios/contracts";
 import { PrismaService } from "../prisma/prisma.service";
 import {
@@ -21,7 +21,7 @@ import { mapProduct } from "./product.mapper";
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
   async create(dto: CreateProductDto): Promise<ProductResponseDto> {
     validateCreateProductDto(dto);
