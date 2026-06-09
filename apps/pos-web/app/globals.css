@@ -1,0 +1,177 @@
+:root {
+  color-scheme: light;
+  --bg: #eef2f3;
+  --ink: #101820;
+  --muted: #66727a;
+  --line: #cbd5d9;
+  --panel: #ffffff;
+  --accent: #0f766e;
+  --accent-dark: #0f4f4a;
+  --danger: #b42318;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.pos-shell {
+  display: grid;
+  gap: 14px;
+  grid-template-areas:
+    "top top top"
+    "cats products order"
+    "cats products order";
+  grid-template-columns: 156px 1fr 360px;
+  grid-template-rows: 66px 1fr;
+  min-height: 100vh;
+  padding: 14px;
+}
+
+.pos-topbar,
+.category-rail,
+.product,
+.order-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.pos-topbar {
+  align-items: center;
+  display: flex;
+  grid-area: top;
+  justify-content: space-between;
+  padding: 0 18px;
+}
+
+.signals {
+  color: var(--muted);
+  display: flex;
+  gap: 14px;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.category-rail {
+  display: grid;
+  gap: 10px;
+  grid-area: cats;
+  align-content: start;
+  padding: 12px;
+}
+
+.category-rail button {
+  background: #e7f5f3;
+  border-radius: 8px;
+  color: var(--accent-dark);
+  font-weight: 850;
+  min-height: 62px;
+}
+
+.product-grid {
+  display: grid;
+  gap: 12px;
+  grid-area: products;
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
+  align-content: start;
+}
+
+.product {
+  display: grid;
+  gap: 18px;
+  min-height: 132px;
+  padding: 18px;
+  text-align: left;
+}
+
+.product span {
+  color: var(--ink);
+  font-size: 1.06rem;
+  font-weight: 850;
+}
+
+.product strong {
+  color: var(--accent-dark);
+  font-size: 1.45rem;
+}
+
+.order-panel {
+  display: grid;
+  grid-area: order;
+  grid-template-rows: auto 1fr auto;
+  padding: 18px;
+}
+
+.order-panel p {
+  color: var(--muted);
+  font-weight: 800;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.order-panel h1 {
+  font-size: 3.8rem;
+  letter-spacing: 0;
+  margin: 8px 0 0;
+}
+
+.order-empty {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  font-weight: 800;
+  justify-content: center;
+}
+
+.pay-button {
+  background: var(--accent);
+  border-radius: 8px;
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 900;
+  min-height: 72px;
+}
+
+@media (max-width: 980px) {
+  .pos-shell {
+    grid-template-areas:
+      "top"
+      "order"
+      "cats"
+      "products";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .signals {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .category-rail {
+    grid-auto-flow: column;
+    overflow-x: auto;
+  }
+
+  .category-rail button {
+    min-width: 128px;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}

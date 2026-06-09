@@ -1,0 +1,44 @@
+{
+  "name": "tonios",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ToniOS enterprise SaaS foundation for fast-food restaurant operations.",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "setup:local": "pnpm install && pnpm db:validate && pnpm db:generate",
+    "dev": "turbo dev",
+    "dev:api": "pnpm --filter @tonios/api dev",
+    "dev:workers": "pnpm --filter @tonios/workers dev",
+    "dev:admin": "pnpm --filter @tonios/admin-web dev",
+    "dev:pos": "pnpm --filter @tonios/pos-web dev",
+    "dev:kds": "pnpm --filter @tonios/kds-web dev",
+    "dev:frontend": "turbo dev --filter=@tonios/admin-web --filter=@tonios/pos-web --filter=@tonios/kds-web",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:validate": "pnpm --filter @tonios/db prisma:validate",
+    "db:generate": "pnpm --filter @tonios/db prisma:generate",
+    "db:migrate": "pnpm --filter @tonios/db prisma:migrate:dev",
+    "db:migrate:dev": "pnpm --filter @tonios/db prisma:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @tonios/db prisma:migrate:deploy",
+    "db:studio": "pnpm --filter @tonios/db prisma:studio",
+    "docker:up": "docker compose -f docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker-compose.yml down"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "@types/node": "^24.3.0",
+    "eslint": "^9.34.0",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.41.0"
+  }
+}

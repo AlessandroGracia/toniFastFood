@@ -1,0 +1,19 @@
+{
+  "name": "@tonios/tenant-context",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"No tests configured for tenant-context yet\""
+  },
+  "dependencies": {
+    "@tonios/auth": "workspace:*",
+    "@tonios/contracts": "workspace:*"
+  }
+}

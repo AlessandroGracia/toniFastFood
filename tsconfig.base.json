@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "baseUrl": ".",
+    "paths": {
+      "@tonios/auth": ["packages/auth/src/index.ts"],
+      "@tonios/config": ["packages/config/src/index.ts"],
+      "@tonios/contracts": ["packages/contracts/src/index.ts"],
+      "@tonios/db": ["packages/db/src/index.ts"],
+      "@tonios/domain": ["packages/domain/src/index.ts"],
+      "@tonios/errors": ["packages/errors/src/index.ts"],
+      "@tonios/logger": ["packages/logger/src/index.ts"],
+      "@tonios/realtime-client": ["packages/realtime-client/src/index.ts"],
+      "@tonios/sync-client": ["packages/sync-client/src/index.ts"],
+      "@tonios/tenant-context": ["packages/tenant-context/src/index.ts"],
+      "@tonios/ui": ["packages/ui/src/index.ts"],
+      "@tonios/api-sdk": ["packages/api-sdk/src/index.ts"]
+    }
+  }
+}
