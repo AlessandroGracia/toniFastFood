@@ -78,6 +78,9 @@ importers:
       '@tonios/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@tonios/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@tonios/logger':
         specifier: workspace:*
         version: link:../../packages/logger

@@ -4,9 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider          = "postgresql"
-  url               = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 enum TenantStatus {
@@ -59,6 +58,44 @@ enum OutboxEventStatus {
   FAILED
 }
 
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum ProductVariantStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+  ARCHIVED
+}
+
+enum InventoryItemStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum InventoryMovementType {
+  STOCK_IN
+  STOCK_OUT
+  ADJUSTMENT
+  WASTE
+}
+
+enum InventoryMovementStatus {
+  POSTED
+  VOIDED
+  REVERSED
+}
+
 model Tenant {
   id              String             @id @default(uuid()) @db.Uuid
   slug            String             @unique @db.VarChar(80)
@@ -75,6 +112,11 @@ model Tenant {
   roles           Role[]
   auditLogs       AuditLog[]
   outboxEvents    OutboxEvent[]
+  categories      Category[]
+  products        Product[]
+  productVariants ProductVariant[]
+  inventoryItems  InventoryItem[]
+  inventoryMovements InventoryMovement[]
 
   @@index([status])
   @@map("tenants")
@@ -92,6 +134,8 @@ model Branch {
   tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
   devices      Device[]
   branchAccess BranchAccess[]
+  inventoryItems InventoryItem[]
+  inventoryMovements InventoryMovement[]
 
   @@unique([tenantId, code])
   @@index([tenantId, status])
@@ -249,4 +293,137 @@ model OutboxEvent {
   @@index([tenantId, aggregateType, aggregateId])
   @@index([tenantId, branchId, occurredAt])
   @@map("outbox_events")
+}
+
+model Category {
+  id          String         @id @default(uuid()) @db.Uuid
+  tenantId    String         @map("tenant_id") @db.Uuid
+  name        String         @db.VarChar(160)
+  slug        String         @db.VarChar(180)
+  description String?        @db.VarChar(500)
+  sortOrder   Int            @default(0) @map("sort_order")
+  status      CategoryStatus @default(ACTIVE)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?      @map("deleted_at") @db.Timestamptz(6)
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  products    Product[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, status])
+  @@index([tenantId, name])
+  @@index([tenantId, deletedAt])
+  @@map("categories")
+}
+
+model Product {
+  id          String           @id @default(uuid()) @db.Uuid
+  tenantId    String           @map("tenant_id") @db.Uuid
+  categoryId  String           @map("category_id") @db.Uuid
+  name        String           @db.VarChar(180)
+  slug        String           @db.VarChar(200)
+  description String?          @db.VarChar(800)
+  sku         String?          @db.VarChar(80)
+  barcode     String?          @db.VarChar(80)
+  status      ProductStatus    @default(ACTIVE)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt   DateTime?        @map("deleted_at") @db.Timestamptz(6)
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  category    Category         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  variants    ProductVariant[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId, categoryId])
+  @@index([tenantId, status])
+  @@index([tenantId, name])
+  @@index([tenantId, sku])
+  @@index([tenantId, barcode])
+  @@index([tenantId, deletedAt])
+  @@map("products")
+}
+
+model ProductVariant {
+  id             String               @id @default(uuid()) @db.Uuid
+  tenantId       String               @map("tenant_id") @db.Uuid
+  productId      String               @map("product_id") @db.Uuid
+  name           String               @db.VarChar(180)
+  sku            String?              @db.VarChar(80)
+  barcode        String?              @db.VarChar(80)
+  priceCents     Int                  @default(0) @map("price_cents")
+  currency       String               @default("USD") @db.Char(3)
+  trackInventory Boolean              @default(true) @map("track_inventory")
+  sortOrder      Int                  @default(0) @map("sort_order")
+  status         ProductVariantStatus @default(ACTIVE)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime             @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt      DateTime?            @map("deleted_at") @db.Timestamptz(6)
+  tenant         Tenant               @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  product        Product              @relation(fields: [productId], references: [id], onDelete: Restrict)
+  inventoryItems InventoryItem[]
+
+  @@index([tenantId, productId])
+  @@index([tenantId, status])
+  @@index([tenantId, name])
+  @@index([tenantId, sku])
+  @@index([tenantId, barcode])
+  @@index([tenantId, deletedAt])
+  @@map("product_variants")
+}
+
+model InventoryItem {
+  id               String              @id @default(uuid()) @db.Uuid
+  tenantId         String              @map("tenant_id") @db.Uuid
+  branchId         String              @map("branch_id") @db.Uuid
+  productVariantId String              @map("product_variant_id") @db.Uuid
+  name             String              @db.VarChar(180)
+  sku              String?             @db.VarChar(80)
+  barcode          String?             @db.VarChar(80)
+  unit             String              @default("unit") @db.VarChar(40)
+  quantityOnHand   Decimal             @default(0) @map("quantity_on_hand") @db.Decimal(14, 3)
+  reorderPoint     Decimal?            @map("reorder_point") @db.Decimal(14, 3)
+  status           InventoryItemStatus @default(ACTIVE)
+  createdAt        DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt        DateTime?           @map("deleted_at") @db.Timestamptz(6)
+  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch           Branch              @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  productVariant   ProductVariant      @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
+  movements        InventoryMovement[]
+
+  @@unique([tenantId, branchId, productVariantId])
+  @@index([tenantId, branchId, status])
+  @@index([tenantId, branchId, name])
+  @@index([tenantId, branchId, sku])
+  @@index([tenantId, branchId, barcode])
+  @@index([tenantId, branchId, deletedAt])
+  @@map("inventory_items")
+}
+
+model InventoryMovement {
+  id              String                  @id @default(uuid()) @db.Uuid
+  tenantId        String                  @map("tenant_id") @db.Uuid
+  branchId        String                  @map("branch_id") @db.Uuid
+  inventoryItemId String                  @map("inventory_item_id") @db.Uuid
+  type            InventoryMovementType
+  status          InventoryMovementStatus @default(POSTED)
+  quantity        Decimal                 @db.Decimal(14, 3)
+  unitCostCents   Int?                    @map("unit_cost_cents")
+  reason          String?                 @db.VarChar(280)
+  referenceType   String?                 @map("reference_type") @db.VarChar(80)
+  referenceId     String?                 @map("reference_id") @db.Uuid
+  metadata        Json?
+  createdAt       DateTime                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt       DateTime?               @map("deleted_at") @db.Timestamptz(6)
+  tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  branch          Branch                  @relation(fields: [branchId], references: [id], onDelete: Restrict)
+  inventoryItem   InventoryItem           @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId, branchId, createdAt])
+  @@index([tenantId, branchId, type])
+  @@index([tenantId, branchId, status])
+  @@index([tenantId, inventoryItemId])
+  @@index([tenantId, branchId, deletedAt])
+  @@map("inventory_movements")
 }

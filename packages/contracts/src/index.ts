@@ -41,3 +41,6 @@ export interface ProblemDetails {
   code: string;
   correlationId?: UUID;
 }
+
+export * from "./catalog.js";
+export * from "./inventory.js";

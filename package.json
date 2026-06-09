@@ -23,6 +23,7 @@
     "test": "turbo test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "db": "pnpm db:validate && pnpm db:generate",
     "db:validate": "pnpm --filter @tonios/db prisma:validate",
     "db:generate": "pnpm --filter @tonios/db prisma:generate",
     "db:migrate": "pnpm --filter @tonios/db prisma:migrate:dev",

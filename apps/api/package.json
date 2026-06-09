@@ -16,6 +16,7 @@
     "@nestjs/platform-express": "^11.1.6",
     "@tonios/config": "workspace:*",
     "@tonios/contracts": "workspace:*",
+    "@tonios/db": "workspace:*",
     "@tonios/logger": "workspace:*",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"

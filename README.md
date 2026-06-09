@@ -49,7 +49,6 @@ cp .env.example .env
 3. Edit `.env` and point these variables to your external services:
 
 - `DATABASE_URL`: PostgreSQL connection string for the ToniOS development database.
-- `SHADOW_DATABASE_URL`: isolated PostgreSQL database required by `prisma migrate dev`.
 - `REDIS_URL`: external Redis endpoint.
 - `NATS_URL`: external NATS endpoint with JetStream enabled.
 - `CORS_ORIGIN`: local web origins allowed by the API.
@@ -68,8 +67,7 @@ pnpm db:generate
 pnpm db:migrate:dev
 ```
 
-Use `pnpm db:migrate:deploy` for staging/production-style migration execution. That command
-does not use Prisma's development shadow database workflow.
+Use `pnpm db:migrate:deploy` for staging/production-style migration execution.
 
 6. Start the backend and frontends:
 
@@ -85,6 +83,23 @@ pnpm dev:admin
 pnpm dev:pos
 pnpm dev:kds
 ```
+
+## Validación En VM Ubuntu
+
+El flujo de validación técnica está pensado para Ubuntu Server 24.04 con Node.js, pnpm,
+Git y PostgreSQL 16 instalados. No requiere Docker, WSL ni servicios locales en Windows.
+
+Después de hacer `git pull` en la VM, ejecuta:
+
+```bash
+pnpm install
+pnpm db:validate
+pnpm db:generate
+pnpm typecheck
+pnpm build
+```
+
+También puedes usar `pnpm db` como atajo para validar Prisma y generar Prisma Client.
 
 ## Docker Opcional
 
